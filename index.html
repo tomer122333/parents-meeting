@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>הרשמה לאסיפת הורים</title>
+  <title>מערכת אסיפת הורים בית ספרית</title>
   <style>
     :root {
       --primary: #2563eb;
@@ -14,21 +14,26 @@
       --text-muted: #64748b;
       --border: #e2e8f0;
       --occupied: #cbd5e1;
+      --danger: #ef4444;
+      --success: #16a34a;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
-    body { background-color: var(--bg); color: var(--text); padding: 24px 16px; display: flex; justify-content: center; }
-    .container { max-width: 640px; width: 100%; background: var(--card-bg); border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.06); padding: 32px 24px; border: 1px solid var(--border); }
+    body { background-color: var(--bg); color: var(--text); padding: 24px 16px; display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
+    .container { max-width: 640px; width: 100%; background: var(--card-bg); border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.06); padding: 32px 24px; border: 1px solid var(--border); margin-bottom: 24px; }
+    .wide-container { max-width: 850px; }
+    
     h1 { font-size: 1.5rem; font-weight: 700; margin-bottom: 8px; text-align: center; color: #0f172a; }
-    p.subtitle { text-align: center; color: var(--text-muted); font-size: 0.95rem; margin-bottom: 28px; }
+    p.subtitle { text-align: center; color: var(--text-muted); font-size: 0.95rem; margin-bottom: 24px; }
 
-    .form-group { margin-bottom: 18px; }
-    label { display: block; font-weight: 600; font-size: 0.9rem; margin-bottom: 6px; }
-    input { width: 100%; padding: 12px 14px; border: 1px solid var(--border); border-radius: 8px; font-size: 1rem; transition: border 0.2s; }
-    input:focus { outline: none; border-color: var(--primary); }
+    .form-group { margin-bottom: 16px; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    label { display: block; font-weight: 600; font-size: 0.88rem; margin-bottom: 6px; }
+    input, select { width: 100%; padding: 11px 13px; border: 1px solid var(--border); border-radius: 8px; font-size: 0.95rem; transition: border 0.2s; }
+    input:focus, select:focus { outline: none; border-color: var(--primary); }
 
     .slots-title { font-weight: 600; font-size: 0.95rem; margin: 24px 0 12px; }
-    .slots-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(105px, 1fr)); gap: 10px; margin-bottom: 24px; }
+    .slots-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 10px; margin-bottom: 24px; }
     .slot-btn { padding: 10px; border: 1px solid var(--border); border-radius: 8px; background: #fff; cursor: pointer; font-size: 0.95rem; font-weight: 500; text-align: center; transition: all 0.2s; }
     .slot-btn:hover:not(.occupied):not(.selected) { border-color: var(--primary); background: #eff6ff; }
     .slot-btn.selected { background: var(--primary); color: #fff; border-color: var(--primary); }
@@ -38,10 +43,29 @@
     .btn-submit:hover { background: var(--primary-hover); }
     .btn-submit:disabled { opacity: 0.6; cursor: not-allowed; }
 
-    .success-card { display: none; text-align: center; padding: 20px 0; }
-    .success-icon { font-size: 3.5rem; margin-bottom: 12px; }
-    .success-title { font-size: 1.4rem; font-weight: 700; margin-bottom: 8px; color: #16a34a; }
-    .calendar-btn { display: inline-block; margin-top: 20px; padding: 12px 24px; background: #0f172a; color: #fff; border-radius: 8px; text-decoration: none; font-weight: 600; }
+    .btn-secondary { background: #0f172a; color: #fff; padding: 10px 18px; border-radius: 8px; border: none; cursor: pointer; font-weight: 600; text-decoration: none; display: inline-block; }
+    .btn-secondary:hover { opacity: 0.9; }
+
+    .link-box { background: #f1f5f9; padding: 14px; border-radius: 8px; margin-top: 14px; border: 1px solid var(--border); word-break: break-all; }
+    .copy-btn { background: var(--primary); color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 0.85rem; margin-top: 6px; }
+
+    .admin-toggle-link { color: var(--text-muted); font-size: 0.85rem; text-decoration: none; cursor: pointer; }
+    .admin-toggle-link:hover { text-decoration: underline; }
+
+    table { width: 100%; border-collapse: collapse; text-align: right; font-size: 0.92rem; margin-top: 16px; }
+    th, td { padding: 10px 12px; border-bottom: 1px solid var(--border); }
+    th { background: #f8fafc; font-weight: 600; color: #334155; }
+    .status-badge { display: inline-block; padding: 3px 8px; border-radius: 6px; font-size: 0.8rem; font-weight: 600; }
+    .status-free { background: #dcfce7; color: #15803d; }
+    .status-taken { background: #fee2e2; color: #b91c1c; }
+    .btn-del { background: #fee2e2; color: #b91c1c; border: 1px solid #fecaca; border-radius: 6px; padding: 4px 8px; cursor: pointer; font-size: 0.8rem; }
+
+    @media print {
+      body { background: #fff; padding: 0; }
+      .container:not(#view-admin), .admin-actions button, .admin-toggle-link { display: none !important; }
+      #view-admin { display: block !important; box-shadow: none; border: none; width: 100%; max-width: 100%; }
+      th, td { border: 1px solid #ddd; }
+    }
   </style>
 
   <!-- Firebase Scripts -->
@@ -50,52 +74,156 @@
 </head>
 <body>
 
-  <div class="container">
-    <div id="booking-section">
-      <h1>אסיפת הורים</h1>
-      <p class="subtitle">אנא בחרו שעה נוחה ומלאו את הפרטים לקביעת פגישה</p>
+  <!-- מסך 1: יצירת כיתה / אסיפה חדשה (דף הבית למורה) -->
+  <div class="container" id="view-create" style="display: none;">
+    <h1>יצירת אסיפת הורים כיתתית</h1>
+    <p class="subtitle">הגדירו את פרטי הכיתה והשעות וקבלו קישור ייעודי להורים</p>
 
-      <form id="appointment-form">
+    <form id="create-class-form">
+      <div class="form-group">
+        <label>שם המורה והכיתה</label>
+        <input type="text" id="create-title" required placeholder="למשל: כיתה ב'1 - הרב תומר">
+      </div>
+
+      <div class="form-row">
         <div class="form-group">
-          <label for="parentName">שם ההורה</label>
-          <input type="text" id="parentName" required placeholder="לדוגמה: ישראל ישראלי">
+          <label>תאריך האסיפה</label>
+          <input type="date" id="create-date" required>
         </div>
-
         <div class="form-group">
-          <label for="studentName">שם התלמיד/ה</label>
-          <input type="text" id="studentName" required placeholder="לדוגמה: דני ישראלי">
+          <label>משך כל פגישה</label>
+          <select id="create-duration">
+            <option value="10">10 דקות</option>
+            <option value="15" selected>15 דקות</option>
+            <option value="20">20 דקות</option>
+            <option value="30">30 דקות</option>
+          </select>
         </div>
+      </div>
 
+      <div class="form-row">
         <div class="form-group">
-          <label for="parentPhone">טלפון ליצירת קשר</label>
-          <input type="tel" id="parentPhone" required placeholder="050-0000000">
+          <label>שעת התחלה</label>
+          <input type="time" id="create-start" value="16:00" required>
         </div>
-
         <div class="form-group">
-          <label for="parentEmail">אימייל (לקבלת תזכורת)</label>
-          <input type="email" id="parentEmail" required placeholder="name@example.com">
+          <label>שעת סיום</label>
+          <input type="time" id="create-end" value="20:00" required>
         </div>
+      </div>
 
-        <div class="slots-title">בחירת משבצת זמן:</div>
-        <div class="slots-grid" id="slots-container">טוען שעות פנויות...</div>
+      <div class="form-group">
+        <label>סיסמה אישית לפאנל המורה</label>
+        <input type="password" id="create-password" required placeholder="הגדר סיסמה לניהול">
+      </div>
 
-        <button type="submit" class="btn-submit" id="submitBtn" disabled>אישור וקביעת פגישה</button>
-      </form>
+      <button type="submit" class="btn-submit">צור קישור לאסיפת הורים 🚀</button>
+    </form>
+  </div>
+
+  <!-- מסך 2: סיום יצירה והצגת הקישורים למורה -->
+  <div class="container" id="view-created-success" style="display: none; text-align: center;">
+    <div style="font-size: 3rem; margin-bottom: 10px;">🎉</div>
+    <h1>האסיפה נוצרה בהצלחה!</h1>
+    <p class="subtitle" id="created-class-name"></p>
+
+    <div style="text-align: right;">
+      <label>📱 קישור לשליחה להורים:</label>
+      <div class="link-box">
+        <span id="link-parent"></span>
+      </div>
+      <button class="copy-btn" onclick="copyText('link-parent')">העתק קישור להורים 📋</button>
+
+      <div style="margin-top: 20px;">
+        <label>🔒 קישור ישיר לפאנל ניהול המורה:</label>
+        <div class="link-box">
+          <span id="link-teacher"></span>
+        </div>
+        <button class="copy-btn" onclick="copyText('link-teacher')">העתק קישור ניהול 📋</button>
+      </div>
     </div>
 
-    <div class="success-card" id="success-section">
-      <div class="success-icon">✅</div>
-      <div class="success-title">הפגישה נקבעה בהצלחה!</div>
-      <p id="success-details" style="color: var(--text-muted); line-height: 1.6;"></p>
-      
-      <a href="#" id="gcal-link" target="_blank" class="calendar-btn">
-        📅 הוספה ל-Google Calendar
-      </a>
+    <div style="margin-top: 28px;">
+      <a href="#" id="go-to-admin-btn" class="btn-secondary">כניסה לפאנל הניהול של הכיתה</a>
     </div>
   </div>
 
+  <!-- מסך 3: הרשמה להורים (לפי כיתה) -->
+  <div class="container" id="view-booking" style="display: none;">
+    <h1 id="parent-view-title">אסיפת הורים</h1>
+    <p class="subtitle" id="parent-view-date"></p>
+
+    <form id="appointment-form">
+      <div class="form-group">
+        <label for="parentName">שם ההורה</label>
+        <input type="text" id="parentName" required placeholder="ישראל ישראלי">
+      </div>
+      <div class="form-group">
+        <label for="studentName">שם התלמיד/ה</label>
+        <input type="text" id="studentName" required placeholder="דני ישראלי">
+      </div>
+      <div class="form-group">
+        <label for="parentPhone">טלפון ליצירת קשר</label>
+        <input type="tel" id="parentPhone" required placeholder="050-0000000">
+      </div>
+      <div class="form-group">
+        <label for="parentEmail">אימייל (לקבלת תזכורת)</label>
+        <input type="email" id="parentEmail" required placeholder="name@example.com">
+      </div>
+
+      <div class="slots-title">בחירת משבצת זמן:</div>
+      <div class="slots-grid" id="slots-container">טוען שעות...</div>
+
+      <button type="submit" class="btn-submit" id="submitBtn" disabled>אישור וקביעת פגישה</button>
+    </form>
+  </div>
+
+  <!-- מסך 4: אישור הרשמה להורה -->
+  <div class="container" id="view-success" style="display: none; text-align: center;">
+    <div style="font-size: 3.5rem; margin-bottom: 12px;">✅</div>
+    <h1 style="color: var(--success);">הפגישה נקבעה בהצלחה!</h1>
+    <p id="success-details" style="color: var(--text-muted); line-height: 1.6; margin: 16px 0;"></p>
+    <a href="#" id="gcal-link" target="_blank" class="btn-secondary">📅 הוספה ל-Google Calendar</a>
+  </div>
+
+  <!-- מסך 5: פאנל ניהול למורה -->
+  <div class="container wide-container" id="view-admin" style="display: none;">
+    <div style="display:flex; justify-content: space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:16px;">
+      <div>
+        <h2 id="admin-title">פאנל ניהול אסיפת הורים</h2>
+        <p style="color: var(--text-muted); font-size:0.9rem;" id="admin-sub"></p>
+      </div>
+      <div>
+        <button class="btn-secondary" onclick="window.print()">🖨️ הדפסה</button>
+      </div>
+    </div>
+
+    <div style="overflow-x:auto;">
+      <table>
+        <thead>
+          <tr>
+            <th>שעה</th>
+            <th>סטטוס</th>
+            <th>תלמיד/ה</th>
+            <th>הורה</th>
+            <th>טלפון</th>
+            <th>אימייל</th>
+            <th>פעולה</th>
+          </tr>
+        </thead>
+        <tbody id="admin-table-body"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- קישור קטן בתחתית לכניסת מורה אם ההורה בדף הרשמה -->
+  <div style="margin-top: 12px; text-align: center;">
+    <a class="admin-toggle-link" id="bottomAdminLink" style="display: none;" onclick="promptTeacherLogin()">🔒 כניסת מורה לכיתה זו</a>
+    <a class="admin-toggle-link" id="bottomCreateLink" style="display: none;" onclick="location.href=baseUrl">➕ יצירת אסיפה לכיתה חדשה</a>
+  </div>
+
   <script>
-    // הגדרות הפרויקט המלאות
+    // הגדרות הפרויקט ב-Firebase
     const firebaseConfig = {
       apiKey: "AIzaSyDHVI9ePlENeGIkL_9JqTJOnlSefgF0Shg",
       authDomain: "zimoon-torim.firebaseapp.com",
@@ -109,53 +237,129 @@
 
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
-    const appointmentsRef = db.ref('appointments');
 
-    // שעות לבחירה (ניתן להתאים את הרשימה לשעות הרצויות)
-    const timeSlots = [
-      "16:00", "16:15", "16:30", "16:45",
-      "17:00", "17:15", "17:30", "17:45",
-      "18:00", "18:15", "18:30", "18:45",
-      "19:00", "19:15", "19:30", "19:45"
-    ];
+    const baseUrl = window.location.origin + window.location.pathname;
+    const urlParams = new URLSearchParams(window.location.search);
+    const currentClassId = urlParams.get('class');
+    const isAdminMode = urlParams.get('admin') === '1';
 
+    let currentClassData = null;
     let selectedSlot = null;
-    let bookedSlots = {};
 
-    const slotsContainer = document.getElementById('slots-container');
-    const submitBtn = document.getElementById('submitBtn');
+    // ניתוב תצוגות לפי ה-URL
+    if (!currentClassId) {
+      // דף ראשי: יצירת כיתה חדשה
+      document.getElementById('view-create').style.display = 'block';
+    } else {
+      // מצב כיתה קיימת - טעינת הנתונים
+      db.ref('classes/' + currentClassId).on('value', (snapshot) => {
+        currentClassData = snapshot.val();
+        if (!currentClassData) {
+          alert('כיתה זו אינה קיימת במערכת.');
+          window.location.href = baseUrl;
+          return;
+        }
 
-    // האזנה בזמן אמת לשינויים
-    appointmentsRef.on('value', (snapshot) => {
-      bookedSlots = snapshot.val() || {};
-      renderSlots();
-    });
+        if (isAdminMode) {
+          checkAdminAccess();
+        } else {
+          showParentBookingView();
+        }
+      });
+    }
 
-    function renderSlots() {
-      slotsContainer.innerHTML = '';
-      timeSlots.forEach(time => {
+    // יצירת כיתה חדשה ע"י מורה
+    document.getElementById('create-class-form').onsubmit = (e) => {
+      e.preventDefault();
+      const title = document.getElementById('create-title').value;
+      const date = document.getElementById('create-date').value;
+      const duration = parseInt(document.getElementById('create-duration').value);
+      const start = document.getElementById('create-start').value;
+      const end = document.getElementById('create-end').value;
+      const password = document.getElementById('create-password').value;
+
+      // יצירת רשימת שעות דינמית
+      const slots = generateTimeSlots(start, end, duration);
+      if (slots.length === 0) {
+        alert("שעת הסיום חייבת להיות מאוחרת משעת ההתחלה.");
+        return;
+      }
+
+      const classId = 'c_' + Math.random().toString(36).substring(2, 9);
+      const classPayload = {
+        title,
+        date,
+        duration,
+        slots,
+        password,
+        createdAt: new Date().toISOString()
+      };
+
+      db.ref('classes/' + classId).set(classPayload).then(() => {
+        document.getElementById('view-create').style.display = 'none';
+        document.getElementById('view-created-success').style.display = 'block';
+        document.getElementById('created-class-name').innerText = title + " (" + date + ")";
+
+        const parentUrl = `${baseUrl}?class=${classId}`;
+        const teacherUrl = `${baseUrl}?class=${classId}&admin=1`;
+
+        document.getElementById('link-parent').innerText = parentUrl;
+        document.getElementById('link-teacher').innerText = teacherUrl;
+        document.getElementById('go-to-admin-btn').href = teacherUrl;
+      });
+    };
+
+    function generateTimeSlots(start, end, intervalMinutes) {
+      const slots = [];
+      let [h, m] = start.split(':').map(Number);
+      const [endH, endM] = end.split(':').map(Number);
+      
+      let current = h * 60 + m;
+      const endTotal = endH * 60 + endM;
+
+      while (current < endTotal) {
+        const curH = String(Math.floor(current / 60)).padStart(2, '0');
+        const curM = String(current % 60).padStart(2, '0');
+        slots.push(`${curH}:${curM}`);
+        current += intervalMinutes;
+      }
+      return slots;
+    }
+
+    // תצוגת הורים
+    function showParentBookingView() {
+      document.getElementById('view-booking').style.display = 'block';
+      document.getElementById('bottomAdminLink').style.display = 'inline';
+      document.getElementById('bottomCreateLink').style.display = 'inline';
+      document.getElementById('parent-view-title').innerText = currentClassData.title;
+      document.getElementById('parent-view-date').innerText = "תאריך: " + currentClassData.date;
+
+      const booked = currentClassData.appointments || {};
+      const container = document.getElementById('slots-container');
+      container.innerHTML = '';
+
+      currentClassData.slots.forEach(time => {
         const slotKey = time.replace(':', '_');
-        const isBooked = !!bookedSlots[slotKey];
+        const isTaken = !!booked[slotKey];
         const btn = document.createElement('button');
         btn.type = 'button';
-        btn.className = `slot-btn ${isBooked ? 'occupied' : ''} ${selectedSlot === time ? 'selected' : ''}`;
+        btn.className = `slot-btn ${isTaken ? 'occupied' : ''} ${selectedSlot === time ? 'selected' : ''}`;
         btn.innerText = time;
-        
-        if (isBooked) {
+        if (isTaken) {
           btn.disabled = true;
         } else {
           btn.onclick = () => {
             selectedSlot = time;
-            renderSlots();
-            submitBtn.disabled = false;
+            showParentBookingView();
+            document.getElementById('submitBtn').disabled = false;
           };
         }
-        slotsContainer.appendChild(btn);
+        container.appendChild(btn);
       });
     }
 
-    // שליחת הטופס עם מניעת כפילות
-    document.getElementById('appointment-form').onsubmit = async (e) => {
+    // שליחת הזמנה ע"י הורה
+    document.getElementById('appointment-form').onsubmit = (e) => {
       e.preventDefault();
       if (!selectedSlot) return;
 
@@ -165,51 +369,102 @@
       const parentEmail = document.getElementById('parentEmail').value;
       const slotKey = selectedSlot.replace(':', '_');
 
-      submitBtn.disabled = true;
-      submitBtn.innerText = "שומר...";
-
-      const slotRef = appointmentsRef.child(slotKey);
-      slotRef.transaction((currentData) => {
-        if (currentData === null) {
-          return {
-            parentName,
-            studentName,
-            parentPhone,
-            parentEmail,
-            time: selectedSlot,
-            createdAt: new Date().toISOString()
-          };
+      const slotRef = db.ref(`classes/${currentClassId}/appointments/${slotKey}`);
+      slotRef.transaction((current) => {
+        if (current === null) {
+          return { parentName, studentName, parentPhone, parentEmail, time: selectedSlot };
         } else {
-          return; // תפוס
+          return;
         }
-      }, (error, committed) => {
-        if (error || !committed) {
-          alert('המשבצת נתפסה זה עתה על ידי הורה אחר. אנא בחרו שעה פנויה.');
+      }, (err, committed) => {
+        if (err || !committed) {
+          alert('המשבצת נתפסה זה עתה. אנא בחרו שעה אחרת.');
           selectedSlot = null;
-          submitBtn.innerText = "אישור וקביעת פגישה";
-          renderSlots();
+          showParentBookingView();
         } else {
-          showConfirmation(parentName, studentName, selectedSlot);
+          document.getElementById('view-booking').style.display = 'none';
+          document.getElementById('view-success').style.display = 'block';
+          document.getElementById('success-details').innerHTML = `
+            פגישה עם <strong>${currentClassData.title}</strong><br>
+            עבור התלמיד/ה: <strong>${studentName}</strong> (${parentName})<br>
+            בתאריך <strong>${currentClassData.date}</strong> בשעה <strong>${selectedSlot}</strong>
+          `;
+
+          // יומן גוגל
+          const dateClean = currentClassData.date.replace(/-/g, '');
+          const timeClean = selectedSlot.replace(':', '') + '00';
+          const gcalUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=אסיפת+הורים+-+${encodeURIComponent(studentName)}&dates=${dateClean}T${timeClean}/${dateClean}T${timeClean}&details=פגישה+עבור+${encodeURIComponent(studentName)}+עם+${encodeURIComponent(currentClassData.title)}`;
+          document.getElementById('gcal-link').href = gcalUrl;
         }
       });
     };
 
-    function showConfirmation(parent, student, time) {
-      document.getElementById('booking-section').style.display = 'none';
-      document.getElementById('success-section').style.display = 'block';
+    // ניהול מורה
+    function checkAdminAccess() {
+      const stored = sessionStorage.getItem('admin_' + currentClassId);
+      if (stored === currentClassData.password) {
+        renderAdmin();
+      } else {
+        const pass = prompt("נא להזין סיסמת מורה לכיתה זו:");
+        if (pass === currentClassData.password) {
+          sessionStorage.setItem('admin_' + currentClassId, pass);
+          renderAdmin();
+        } else {
+          alert("סיסמה שגויה");
+          window.location.href = `${baseUrl}?class=${currentClassId}`;
+        }
+      }
+    }
 
-      document.getElementById('success-details').innerHTML = `
-        נקבעה פגישה עבור <strong>${student}</strong> (${parent})<br>
-        בשעה <strong>${time}</strong>
-      `;
+    function promptTeacherLogin() {
+      window.location.href = `${baseUrl}?class=${currentClassId}&admin=1`;
+    }
 
-      // יצירת קישור ליומן גוגל
-      const startTime = time.replace(':', '') + '00';
-      const now = new Date();
-      const dateStr = now.toISOString().slice(0, 10).replace(/-/g, '');
-      const gcalUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=אסיפת+הורים+-+${encodeURIComponent(student)}&dates=${dateStr}T${startTime}/${dateStr}T${startTime}&details=פגישת+אסיפת+הורים+עבור+${encodeURIComponent(student)}+עם+${encodeURIComponent(parent)}`;
-      
-      document.getElementById('gcal-link').href = gcalUrl;
+    function renderAdmin() {
+      document.getElementById('view-admin').style.display = 'block';
+      document.getElementById('bottomCreateLink').style.display = 'inline';
+      document.getElementById('admin-title').innerText = currentClassData.title;
+      document.getElementById('admin-sub').innerText = "תאריך: " + currentClassData.date;
+
+      const tbody = document.getElementById('admin-table-body');
+      tbody.innerHTML = '';
+      const booked = currentClassData.appointments || {};
+
+      currentClassData.slots.forEach(time => {
+        const slotKey = time.replace(':', '_');
+        const data = booked[slotKey];
+        const tr = document.createElement('tr');
+
+        if (data) {
+          tr.innerHTML = `
+            <td><strong>${time}</strong></td>
+            <td><span class="status-badge status-taken">תפוס</span></td>
+            <td><strong>${data.studentName || '-'}</strong></td>
+            <td>${data.parentName || '-'}</td>
+            <td><a href="tel:${data.parentPhone}">${data.parentPhone || '-'}</a></td>
+            <td>${data.parentEmail || '-'}</td>
+            <td><button class="btn-del" onclick="deleteSlot('${slotKey}')">ביטול 🗑️</button></td>
+          `;
+        } else {
+          tr.innerHTML = `
+            <td><strong>${time}</strong></td>
+            <td><span class="status-badge status-free">פנוי</span></td>
+            <td>-</td><td>-</td><td>-</td><td>-</td><td>-</td>
+          `;
+        }
+        tbody.appendChild(tr);
+      });
+    }
+
+    function deleteSlot(slotKey) {
+      if (confirm("לבטל את הפגישה ולשחרר את השעה?")) {
+        db.ref(`classes/${currentClassId}/appointments/${slotKey}`).remove();
+      }
+    }
+
+    function copyText(elemId) {
+      const txt = document.getElementById(elemId).innerText;
+      navigator.clipboard.writeText(txt).then(() => alert("הקישור הועתק!"));
     }
   </script>
 </body>
