@@ -72,7 +72,8 @@
     .status-badge { display: inline-block; padding: 3px 8px; border-radius: 6px; font-size: 0.8rem; font-weight: 600; }
     .status-free { background: #dcfce7; color: #15803d; }
     .status-taken { background: #fee2e2; color: #b91c1c; }
-    .status-current { background: #fef08a; color: #854d0e; }
+    .status-current { background: #fef08a; color: #854d0e; font-weight: 700; }
+    .my-row { background: #eff6ff !important; font-weight: 700; border: 2px solid var(--primary); }
     .btn-del { background: #fee2e2; color: #b91c1c; border: 1px solid #fecaca; border-radius: 6px; padding: 4px 8px; cursor: pointer; font-size: 0.8rem; }
 
     @media print {
@@ -83,7 +84,6 @@
     }
   </style>
 
-  <!-- Firebase Scripts -->
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 </head>
@@ -201,13 +201,46 @@
       <a href="#" id="whatsapp-link" target="_blank" class="btn-whatsapp">
         💬 שמור פרטי פגישה בווטסאפ
       </a>
+      <a href="#" id="parent-board-link" class="btn-secondary" style="background: #2563eb; padding: 12px;">
+        📋 צפה בלוח התורים הכיתתי בלייב
+      </a>
       <a href="#" id="gcal-link" target="_blank" class="btn-secondary" style="padding: 12px;">
         📅 הוספה ל-Google Calendar
       </a>
     </div>
   </div>
 
-  <!-- מסך 5: פאנל ניהול למורה -->
+  <!-- מסך 5: לוח תורים כיתתי להורה בלייב (ללא אפשרויות ניהול) -->
+  <div class="container wide-container" id="view-parent-board" style="display: none;">
+    <div style="text-align: center; margin-bottom: 20px;">
+      <h2 id="board-title">לוח אסיפת הורים בלייב</h2>
+      <p style="color: var(--text-muted); font-size: 0.95rem;" id="board-sub"></p>
+    </div>
+
+    <div id="board-queue-card" class="queue-status-box">
+      <div id="board-queue-headline" class="queue-active">טוען נתונים...</div>
+      <div id="board-queue-subtext" class="queue-remaining">מתעדכן בזמן אמת</div>
+    </div>
+
+    <div style="overflow-x:auto;">
+      <table>
+        <thead>
+          <tr>
+            <th>שעה</th>
+            <th>סטטוס</th>
+            <th>תלמיד/ה</th>
+          </tr>
+        </thead>
+        <tbody id="board-table-body"></tbody>
+      </table>
+    </div>
+
+    <div style="text-align: center; margin-top: 24px;">
+      <button class="btn-secondary" onclick="location.href=baseUrl + '?class=' + currentClassId">חזרה להרשמה</button>
+    </div>
+  </div>
+
+  <!-- מסך 6: פאנל ניהול מלא למורה -->
   <div class="container wide-container" id="view-admin" style="display: none;">
     <div style="display:flex; justify-content: space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:16px;">
       <div>
@@ -262,10 +295,11 @@
     const urlParams = new URLSearchParams(window.location.search);
     const currentClassId = urlParams.get('class');
     const isAdminMode = urlParams.get('admin') === '1';
+    const trackedSlotFromUrl = urlParams.get('track');
 
     let currentClassData = null;
     let selectedSlot = null;
-    let myBookedSlot = null;
+    let myBookedSlot = trackedSlotFromUrl || null;
 
     if (!currentClassId) {
       document.getElementById('view-create').style.display = 'block';
@@ -280,6 +314,8 @@
 
         if (isAdminMode) {
           checkAdminAccess();
+        } else if (trackedSlotFromUrl) {
+          showParentLiveBoard();
         } else {
           if (myBookedSlot) {
             updateParentLiveStatus();
@@ -290,7 +326,7 @@
       });
     }
 
-    // יצירת כיתה חדשה
+    // יצירת כיתה
     document.getElementById('create-class-form').onsubmit = (e) => {
       e.preventDefault();
       const title = document.getElementById('create-title').value;
@@ -348,7 +384,7 @@
       return slots;
     }
 
-    // תצוגת הורים
+    // תצוגת הורים - טופס רישום
     function showParentBookingView() {
       document.getElementById('view-booking').style.display = 'block';
       document.getElementById('bottomAdminLink').style.display = 'inline';
@@ -380,7 +416,7 @@
       });
     }
 
-    // שליחת הזמנת הורה
+    // שמירת הזמנה ע"י הורה
     document.getElementById('appointment-form').onsubmit = (e) => {
       e.preventDefault();
       if (!selectedSlot) return;
@@ -412,10 +448,14 @@
             בתאריך <strong>${currentClassData.date}</strong> בשעה <strong>${selectedSlot}</strong>
           `;
 
-          // ווטסאפ לשמירה עצמית
+          // קישור למעקב הורה חי
+          const trackUrl = `${baseUrl}?class=${currentClassId}&track=${encodeURIComponent(selectedSlot)}`;
+          document.getElementById('parent-board-link').href = trackUrl;
+
+          // הודעת ווטסאפ עם הקישור ללוח החי
           let cleanPhone = parentPhone.replace(/\D/g, '');
           if (cleanPhone.startsWith('0')) cleanPhone = '972' + cleanPhone.substring(1);
-          const msg = `*אישור אסיפת הורים*\nשלום ${parentName},\nנקבעה פגישה עבור *${studentName}*\nמסגרת: ${currentClassData.title}\nבתאריך: ${currentClassData.date}\nבשעה: ${selectedSlot}`;
+          const msg = `*אישור אסיפת הורים*\nשלום ${parentName},\nנקבעה פגישה עבור *${studentName}*\nמסגרת: ${currentClassData.title}\nבתאריך: ${currentClassData.date}\nבשעה: ${selectedSlot}\n\nלמעקב חי אחר התקדמות התורים וצפייה בלוח:\n${trackUrl}`;
           document.getElementById('whatsapp-link').href = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(msg)}`;
 
           // יומן גוגל
@@ -429,7 +469,7 @@
       });
     };
 
-    // מעקב תור חי להורה
+    // עדכון סטטוס מקוצר במסך אישור
     function updateParentLiveStatus() {
       const activeSlot = currentClassData.currentActiveSlot;
       const box = document.getElementById('live-queue-card');
@@ -450,7 +490,6 @@
         return;
       }
 
-      // חישוב כמה תורים נותרו
       const slots = currentClassData.slots;
       const myIdx = slots.indexOf(myBookedSlot);
       const activeIdx = slots.indexOf(activeSlot);
@@ -462,9 +501,77 @@
         box.className = "queue-status-box";
       } else {
         headline.innerText = `השעה שלך (${myBookedSlot}) כבר חלפה`;
-        subtext.innerText = `המורה מקבל כעת את שעת ${activeSlot}. אם לא הספקת להיכנס פנה למורה.`;
+        subtext.innerText = `המורה מקבל כעת את שעת ${activeSlot}.`;
         box.className = "queue-status-box";
       }
+    }
+
+    // הצגת לוח תורים כיתתי בלייב להורה
+    function showParentLiveBoard() {
+      document.getElementById('view-booking').style.display = 'none';
+      document.getElementById('view-success').style.display = 'none';
+      document.getElementById('view-parent-board').style.display = 'block';
+
+      document.getElementById('board-title').innerText = currentClassData.title;
+      document.getElementById('board-sub').innerText = "תאריך: " + currentClassData.date;
+
+      const activeSlot = currentClassData.currentActiveSlot;
+      const box = document.getElementById('board-queue-card');
+      const headline = document.getElementById('board-queue-headline');
+      const subtext = document.getElementById('board-queue-subtext');
+
+      if (!activeSlot) {
+        headline.innerText = "האסיפה טרם החלה";
+        subtext.innerText = myBookedSlot ? `התור שלך נקבע לשעה: ${myBookedSlot}` : "טבלת השעות של הכיתה מוצגת למטה";
+        box.className = "queue-status-box";
+      } else if (activeSlot === myBookedSlot) {
+        headline.innerText = "📢 התור שלך הגיע! היכנס כעת";
+        subtext.innerText = "המורה מקבל אותך כעת בחדר.";
+        box.className = "queue-status-box queue-alert";
+      } else {
+        const slots = currentClassData.slots;
+        const myIdx = slots.indexOf(myBookedSlot);
+        const activeIdx = slots.indexOf(activeSlot);
+
+        if (myIdx !== -1 && myIdx > activeIdx) {
+          headline.innerText = `בפגישה כעת: שעת ${activeSlot}`;
+          subtext.innerText = `נשארו עוד ${myIdx - activeIdx} תורים עד לתורך (${myBookedSlot}).`;
+        } else {
+          headline.innerText = `בפגישה כעת: שעת ${activeSlot}`;
+          subtext.innerText = "הלוח מתעדכן בזמן אמת.";
+        }
+        box.className = "queue-status-box";
+      }
+
+      // רינדור הטבלה ללא כפתורי ניהול וללא מספרי טלפון
+      const tbody = document.getElementById('board-table-body');
+      tbody.innerHTML = '';
+      const booked = currentClassData.appointments || {};
+
+      currentClassData.slots.forEach(time => {
+        const slotKey = time.replace(':', '_');
+        const data = booked[slotKey];
+        const isCurrentActive = (activeSlot === time);
+        const isMySlot = (myBookedSlot === time);
+        const tr = document.createElement('tr');
+
+        if (isMySlot) tr.className = 'my-row';
+
+        if (data) {
+          tr.innerHTML = `
+            <td><strong>${time}</strong> ${isMySlot ? ' ⭐ (התור שלי)' : ''}</td>
+            <td><span class="status-badge ${isCurrentActive ? 'status-current' : 'status-taken'}">${isCurrentActive ? 'בפגישה כעת 🟢' : 'תפוס'}</span></td>
+            <td><strong>${data.studentName || '-'}</strong></td>
+          `;
+        } else {
+          tr.innerHTML = `
+            <td><strong>${time}</strong></td>
+            <td><span class="status-badge status-free">פנוי</span></td>
+            <td>-</td>
+          `;
+        }
+        tbody.appendChild(tr);
+      });
     }
 
     // ניהול מורה
