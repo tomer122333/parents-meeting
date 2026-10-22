@@ -8,6 +8,8 @@
     :root {
       --primary: #2563eb;
       --primary-hover: #1d4ed8;
+      --whatsapp: #25d366;
+      --whatsapp-hover: #1ebd5b;
       --bg: #f8fafc;
       --card-bg: #ffffff;
       --text: #1e293b;
@@ -21,7 +23,7 @@
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
     body { background-color: var(--bg); color: var(--text); padding: 24px 16px; display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
     .container { max-width: 640px; width: 100%; background: var(--card-bg); border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.06); padding: 32px 24px; border: 1px solid var(--border); margin-bottom: 24px; }
-    .wide-container { max-width: 850px; }
+    .wide-container { max-width: 950px; }
     
     h1 { font-size: 1.5rem; font-weight: 700; margin-bottom: 8px; text-align: center; color: #0f172a; }
     p.subtitle { text-align: center; color: var(--text-muted); font-size: 0.95rem; margin-bottom: 24px; }
@@ -46,6 +48,18 @@
     .btn-secondary { background: #0f172a; color: #fff; padding: 10px 18px; border-radius: 8px; border: none; cursor: pointer; font-weight: 600; text-decoration: none; display: inline-block; }
     .btn-secondary:hover { opacity: 0.9; }
 
+    .btn-whatsapp { background: var(--whatsapp); color: #fff; padding: 12px 20px; border-radius: 8px; text-decoration: none; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; gap: 8px; width: 100%; margin-top: 10px; font-size: 1rem; }
+    .btn-whatsapp:hover { background: var(--whatsapp-hover); }
+
+    .btn-call-parent { background: #16a34a; color: white; border: none; border-radius: 6px; padding: 6px 10px; cursor: pointer; font-size: 0.82rem; font-weight: 600; display: inline-flex; align-items: center; gap: 4px; text-decoration: none; }
+    .btn-call-parent:hover { background: #15803d; }
+
+    .queue-status-box { background: #f0fdf4; border: 2px solid #86efac; border-radius: 12px; padding: 16px; margin: 20px 0; text-align: center; }
+    .queue-active { font-size: 1.15rem; font-weight: 700; color: #166534; margin-bottom: 6px; }
+    .queue-remaining { font-size: 0.95rem; color: #15803d; }
+    .queue-alert { background: #fef08a; border-color: #facc15; animation: pulse 1.5s infinite; }
+    @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.7; } 100% { opacity: 1; } }
+
     .link-box { background: #f1f5f9; padding: 14px; border-radius: 8px; margin-top: 14px; border: 1px solid var(--border); word-break: break-all; }
     .copy-btn { background: var(--primary); color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 0.85rem; margin-top: 6px; }
 
@@ -58,11 +72,12 @@
     .status-badge { display: inline-block; padding: 3px 8px; border-radius: 6px; font-size: 0.8rem; font-weight: 600; }
     .status-free { background: #dcfce7; color: #15803d; }
     .status-taken { background: #fee2e2; color: #b91c1c; }
+    .status-current { background: #fef08a; color: #854d0e; }
     .btn-del { background: #fee2e2; color: #b91c1c; border: 1px solid #fecaca; border-radius: 6px; padding: 4px 8px; cursor: pointer; font-size: 0.8rem; }
 
     @media print {
       body { background: #fff; padding: 0; }
-      .container:not(#view-admin), .admin-actions button, .admin-toggle-link { display: none !important; }
+      .container:not(#view-admin), .admin-actions button, .admin-toggle-link, .btn-call-parent, .btn-del { display: none !important; }
       #view-admin { display: block !important; box-shadow: none; border: none; width: 100%; max-width: 100%; }
       th, td { border: 1px solid #ddd; }
     }
@@ -74,7 +89,7 @@
 </head>
 <body>
 
-  <!-- מסך 1: יצירת כיתה / אסיפה חדשה (דף הבית למורה) -->
+  <!-- מסך 1: יצירת כיתה / אסיפה חדשה ע"י מורה -->
   <div class="container" id="view-create" style="display: none;">
     <h1>יצירת אסיפת הורים כיתתית</h1>
     <p class="subtitle">הגדירו את פרטי הכיתה והשעות וקבלו קישור ייעודי להורים</p>
@@ -121,7 +136,7 @@
     </form>
   </div>
 
-  <!-- מסך 2: סיום יצירה והצגת הקישורים למורה -->
+  <!-- מסך 2: סיום יצירה והצגת קישורי המורה -->
   <div class="container" id="view-created-success" style="display: none; text-align: center;">
     <div style="font-size: 3rem; margin-bottom: 10px;">🎉</div>
     <h1>האסיפה נוצרה בהצלחה!</h1>
@@ -129,16 +144,12 @@
 
     <div style="text-align: right;">
       <label>📱 קישור לשליחה להורים:</label>
-      <div class="link-box">
-        <span id="link-parent"></span>
-      </div>
+      <div class="link-box"><span id="link-parent"></span></div>
       <button class="copy-btn" onclick="copyText('link-parent')">העתק קישור להורים 📋</button>
 
       <div style="margin-top: 20px;">
         <label>🔒 קישור ישיר לפאנל ניהול המורה:</label>
-        <div class="link-box">
-          <span id="link-teacher"></span>
-        </div>
+        <div class="link-box"><span id="link-teacher"></span></div>
         <button class="copy-btn" onclick="copyText('link-teacher')">העתק קישור ניהול 📋</button>
       </div>
     </div>
@@ -148,7 +159,7 @@
     </div>
   </div>
 
-  <!-- מסך 3: הרשמה להורים (לפי כיתה) -->
+  <!-- מסך 3: הרשמה להורים -->
   <div class="container" id="view-booking" style="display: none;">
     <h1 id="parent-view-title">אסיפת הורים</h1>
     <p class="subtitle" id="parent-view-date"></p>
@@ -163,12 +174,8 @@
         <input type="text" id="studentName" required placeholder="דני ישראלי">
       </div>
       <div class="form-group">
-        <label for="parentPhone">טלפון ליצירת קשר</label>
+        <label for="parentPhone">טלפון נייד (לקבלת הודעות וואטסאפ)</label>
         <input type="tel" id="parentPhone" required placeholder="050-0000000">
-      </div>
-      <div class="form-group">
-        <label for="parentEmail">אימייל (לקבלת תזכורת)</label>
-        <input type="email" id="parentEmail" required placeholder="name@example.com">
       </div>
 
       <div class="slots-title">בחירת משבצת זמן:</div>
@@ -178,12 +185,26 @@
     </form>
   </div>
 
-  <!-- מסך 4: אישור הרשמה להורה -->
+  <!-- מסך 4: אישור הרשמה להורה + מעקב תור חי -->
   <div class="container" id="view-success" style="display: none; text-align: center;">
     <div style="font-size: 3.5rem; margin-bottom: 12px;">✅</div>
     <h1 style="color: var(--success);">הפגישה נקבעה בהצלחה!</h1>
     <p id="success-details" style="color: var(--text-muted); line-height: 1.6; margin: 16px 0;"></p>
-    <a href="#" id="gcal-link" target="_blank" class="btn-secondary">📅 הוספה ל-Google Calendar</a>
+    
+    <!-- כרטיס מעקב תור חי להורה -->
+    <div id="live-queue-card" class="queue-status-box">
+      <div id="queue-headline" class="queue-active">ממתין לתחילת האסיפה...</div>
+      <div id="queue-subtext" class="queue-remaining">נעדכן כאן בזמן אמת כשהתור שלך יתקרב</div>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 10px; max-width: 320px; margin: 0 auto;">
+      <a href="#" id="whatsapp-link" target="_blank" class="btn-whatsapp">
+        💬 שמור פרטי פגישה בווטסאפ
+      </a>
+      <a href="#" id="gcal-link" target="_blank" class="btn-secondary" style="padding: 12px;">
+        📅 הוספה ל-Google Calendar
+      </a>
+    </div>
   </div>
 
   <!-- מסך 5: פאנל ניהול למורה -->
@@ -207,8 +228,8 @@
             <th>תלמיד/ה</th>
             <th>הורה</th>
             <th>טלפון</th>
-            <th>אימייל</th>
-            <th>פעולה</th>
+            <th>קריאה להורה</th>
+            <th>ניהול</th>
           </tr>
         </thead>
         <tbody id="admin-table-body"></tbody>
@@ -216,14 +237,13 @@
     </div>
   </div>
 
-  <!-- קישור קטן בתחתית לכניסת מורה אם ההורה בדף הרשמה -->
+  <!-- קישורי ניווט תחתונים -->
   <div style="margin-top: 12px; text-align: center;">
     <a class="admin-toggle-link" id="bottomAdminLink" style="display: none;" onclick="promptTeacherLogin()">🔒 כניסת מורה לכיתה זו</a>
     <a class="admin-toggle-link" id="bottomCreateLink" style="display: none;" onclick="location.href=baseUrl">➕ יצירת אסיפה לכיתה חדשה</a>
   </div>
 
   <script>
-    // הגדרות הפרויקט ב-Firebase
     const firebaseConfig = {
       apiKey: "AIzaSyDHVI9ePlENeGIkL_9JqTJOnlSefgF0Shg",
       authDomain: "zimoon-torim.firebaseapp.com",
@@ -245,13 +265,11 @@
 
     let currentClassData = null;
     let selectedSlot = null;
+    let myBookedSlot = null;
 
-    // ניתוב תצוגות לפי ה-URL
     if (!currentClassId) {
-      // דף ראשי: יצירת כיתה חדשה
       document.getElementById('view-create').style.display = 'block';
     } else {
-      // מצב כיתה קיימת - טעינת הנתונים
       db.ref('classes/' + currentClassId).on('value', (snapshot) => {
         currentClassData = snapshot.val();
         if (!currentClassData) {
@@ -263,12 +281,16 @@
         if (isAdminMode) {
           checkAdminAccess();
         } else {
-          showParentBookingView();
+          if (myBookedSlot) {
+            updateParentLiveStatus();
+          } else {
+            showParentBookingView();
+          }
         }
       });
     }
 
-    // יצירת כיתה חדשה ע"י מורה
+    // יצירת כיתה חדשה
     document.getElementById('create-class-form').onsubmit = (e) => {
       e.preventDefault();
       const title = document.getElementById('create-title').value;
@@ -278,7 +300,6 @@
       const end = document.getElementById('create-end').value;
       const password = document.getElementById('create-password').value;
 
-      // יצירת רשימת שעות דינמית
       const slots = generateTimeSlots(start, end, duration);
       if (slots.length === 0) {
         alert("שעת הסיום חייבת להיות מאוחרת משעת ההתחלה.");
@@ -292,6 +313,7 @@
         duration,
         slots,
         password,
+        currentActiveSlot: null,
         createdAt: new Date().toISOString()
       };
 
@@ -358,7 +380,7 @@
       });
     }
 
-    // שליחת הזמנה ע"י הורה
+    // שליחת הזמנת הורה
     document.getElementById('appointment-form').onsubmit = (e) => {
       e.preventDefault();
       if (!selectedSlot) return;
@@ -366,13 +388,12 @@
       const parentName = document.getElementById('parentName').value;
       const studentName = document.getElementById('studentName').value;
       const parentPhone = document.getElementById('parentPhone').value;
-      const parentEmail = document.getElementById('parentEmail').value;
       const slotKey = selectedSlot.replace(':', '_');
 
       const slotRef = db.ref(`classes/${currentClassId}/appointments/${slotKey}`);
       slotRef.transaction((current) => {
         if (current === null) {
-          return { parentName, studentName, parentPhone, parentEmail, time: selectedSlot };
+          return { parentName, studentName, parentPhone, time: selectedSlot };
         } else {
           return;
         }
@@ -382,6 +403,7 @@
           selectedSlot = null;
           showParentBookingView();
         } else {
+          myBookedSlot = selectedSlot;
           document.getElementById('view-booking').style.display = 'none';
           document.getElementById('view-success').style.display = 'block';
           document.getElementById('success-details').innerHTML = `
@@ -390,14 +412,60 @@
             בתאריך <strong>${currentClassData.date}</strong> בשעה <strong>${selectedSlot}</strong>
           `;
 
+          // ווטסאפ לשמירה עצמית
+          let cleanPhone = parentPhone.replace(/\D/g, '');
+          if (cleanPhone.startsWith('0')) cleanPhone = '972' + cleanPhone.substring(1);
+          const msg = `*אישור אסיפת הורים*\nשלום ${parentName},\nנקבעה פגישה עבור *${studentName}*\nמסגרת: ${currentClassData.title}\nבתאריך: ${currentClassData.date}\nבשעה: ${selectedSlot}`;
+          document.getElementById('whatsapp-link').href = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(msg)}`;
+
           // יומן גוגל
           const dateClean = currentClassData.date.replace(/-/g, '');
           const timeClean = selectedSlot.replace(':', '') + '00';
           const gcalUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=אסיפת+הורים+-+${encodeURIComponent(studentName)}&dates=${dateClean}T${timeClean}/${dateClean}T${timeClean}&details=פגישה+עבור+${encodeURIComponent(studentName)}+עם+${encodeURIComponent(currentClassData.title)}`;
           document.getElementById('gcal-link').href = gcalUrl;
+
+          updateParentLiveStatus();
         }
       });
     };
+
+    // מעקב תור חי להורה
+    function updateParentLiveStatus() {
+      const activeSlot = currentClassData.currentActiveSlot;
+      const box = document.getElementById('live-queue-card');
+      const headline = document.getElementById('queue-headline');
+      const subtext = document.getElementById('queue-subtext');
+
+      if (!activeSlot) {
+        headline.innerText = "האסיפה טרם החלה";
+        subtext.innerText = `השעה שלך: ${myBookedSlot}. נעדכן כאן כשהמורה יתחיל לקרוא להורים.`;
+        box.className = "queue-status-box";
+        return;
+      }
+
+      if (activeSlot === myBookedSlot) {
+        headline.innerText = "📢 התור שלך הגיע! אתה מוזמן להיכנס כעת";
+        subtext.innerText = "המורה ממתין לך בחדר.";
+        box.className = "queue-status-box queue-alert";
+        return;
+      }
+
+      // חישוב כמה תורים נותרו
+      const slots = currentClassData.slots;
+      const myIdx = slots.indexOf(myBookedSlot);
+      const activeIdx = slots.indexOf(activeSlot);
+
+      if (myIdx > activeIdx) {
+        const remaining = myIdx - activeIdx;
+        headline.innerText = `המורה מקבל כעת את שעת ${activeSlot}`;
+        subtext.innerText = `נשארו עוד ${remaining} תורים לפניך. שעת הפגישה שלך: ${myBookedSlot}`;
+        box.className = "queue-status-box";
+      } else {
+        headline.innerText = `השעה שלך (${myBookedSlot}) כבר חלפה`;
+        subtext.innerText = `המורה מקבל כעת את שעת ${activeSlot}. אם לא הספקת להיכנס פנה למורה.`;
+        box.className = "queue-status-box";
+      }
+    }
 
     // ניהול מורה
     function checkAdminAccess() {
@@ -429,20 +497,32 @@
       const tbody = document.getElementById('admin-table-body');
       tbody.innerHTML = '';
       const booked = currentClassData.appointments || {};
+      const activeSlot = currentClassData.currentActiveSlot;
 
       currentClassData.slots.forEach(time => {
         const slotKey = time.replace(':', '_');
         const data = booked[slotKey];
+        const isCurrentActive = (activeSlot === time);
         const tr = document.createElement('tr');
 
         if (data) {
+          let cleanPhone = data.parentPhone.replace(/\D/g, '');
+          if (cleanPhone.startsWith('0')) cleanPhone = '972' + cleanPhone.substring(1);
+          
+          const inviteMsg = `שלום ${data.parentName}, התור של ${data.studentName} (${time}) הגיע! אתה מוזמן להיכנס כעת לפגישה עם ${currentClassData.title}.`;
+          const waUrl = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(inviteMsg)}`;
+
           tr.innerHTML = `
             <td><strong>${time}</strong></td>
-            <td><span class="status-badge status-taken">תפוס</span></td>
+            <td><span class="status-badge ${isCurrentActive ? 'status-current' : 'status-taken'}">${isCurrentActive ? 'בפגישה כעת 🟢' : 'תפוס'}</span></td>
             <td><strong>${data.studentName || '-'}</strong></td>
             <td>${data.parentName || '-'}</td>
-            <td><a href="tel:${data.parentPhone}">${data.parentPhone || '-'}</a></td>
-            <td>${data.parentEmail || '-'}</td>
+            <td><a href="tel:${data.parentPhone}">${data.parentPhone}</a></td>
+            <td>
+              <a href="${waUrl}" target="_blank" class="btn-call-parent" onclick="setActiveSlot('${time}')">
+                קרא עכשיו 📢
+              </a>
+            </td>
             <td><button class="btn-del" onclick="deleteSlot('${slotKey}')">ביטול 🗑️</button></td>
           `;
         } else {
@@ -454,6 +534,10 @@
         }
         tbody.appendChild(tr);
       });
+    }
+
+    function setActiveSlot(time) {
+      db.ref(`classes/${currentClassId}/currentActiveSlot`).set(time);
     }
 
     function deleteSlot(slotKey) {
